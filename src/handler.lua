@@ -89,7 +89,7 @@ local function log_to_kafka(premature, conf, message)
 end
 
 
-function KongKafkaLogHandler:log(conf)
+function KongKafkaLogHandler:access(conf)
   local message = basic_serializer.serialize(ngx, nil, conf)
 
   if conf.log_to_file then 

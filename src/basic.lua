@@ -109,11 +109,18 @@ function _M.serialize(ngx, kong, conf)
   if PathOnly then
          temp_request = temp_request .. PathOnly
   end
+
+  local request_body, err = kong.request.get_raw_body()
+  if err then
+    kong.log.err("Failed to get raw request body: ", err)
+    return nil
+  end
+
   return {
       name = serviceName,
       eventClass = tostring(ngx.status),
       receivedTime = req.start_time() * 1000,
-      msg = "STARGATE_PROXY_TX",
+      -- msg = "STARGATE_PROXY_TX",
       reason = kong.ctx.shared.errmsg,
       logClass = (((ngx.status == "401" or ngx.status == "403") and ctx.KONG_WAITING_TIME == nil) and "SECURITY_FAILURE" or "SECURITY_SUCCESS"),
       application = {
@@ -121,7 +128,7 @@ function _M.serialize(ngx, kong, conf)
           name = conf.app_name
       },
       device = {
-          vendor = "Optum",
+          -- vendor = "Optum",
           product = "kong-kafka-log",
           hostname = var.hostname,
           ip4 = ipStrToDigits(var.server_addr)
@@ -143,10 +150,14 @@ function _M.serialize(ngx, kong, conf)
       request = {
           request = temp_request,
           method = kong.request.get_method(),
-          Optum_CID_Ext = req.get_headers(1)["optum-cid-ext"],
+          headers = req.get_headers(),
+          request_body = request_body,
           ["in"] = tonumber(var.request_length), --in is reserved word and must wrap it like so
           out = tonumber(var.bytes_sent)
-      }
+      },
+      -- response = {
+      --   response_body = kong.response.get_raw_body()
+      -- }
   }
 end
 
